@@ -13,7 +13,7 @@ from .utilities.src import (
     srcRequest,
     srcUser,
     UserNotFound,
-    GameNotFound
+    GameNotFound,
 )
 from dateutil import parser
 from discord.ext import commands, menus
@@ -131,6 +131,7 @@ class SRC(commands.Cog):
         self.baseUrl = "https://www.speedrun.com/api/v1"
 
     async def getVerified(self, user, game, offset):
+        print(offset)
         userID = user.id
         userName = user.name
 
@@ -157,10 +158,28 @@ class SRC(commands.Cog):
         initMsg = await ctx.reply(embed=e)
 
         # Get verified runs examined by {user}
-        futures = [
-            self.getVerified(user, game, offset) for offset in range(0, 5000, 200)
-        ]
-        runs = await asyncio.gather(*futures)
+        async def getVerifiedLoop():
+            # Messy fix for verifier that verified more than 5000 runs, what a madlad
+            offset = 0
+            amount = 25
+            maxResult = 200
+            runs = []
+            done = False
+            while not done:
+                futures = [
+                    self.getVerified(user, game, o)
+                    for o in range(
+                        maxResult * amount * offset,
+                        maxResult * amount * (offset + 1),
+                        maxResult,
+                    )
+                ]
+                runs += await asyncio.gather(*futures)
+                offset += 1
+                if runs[-1] < 200:
+                    done = True
+            return runs
+        runs = await asyncio.create_task(getVerifiedLoop())
 
         e = discord.Embed(
             title="User: {}".format(user.name),
@@ -389,9 +408,7 @@ class SRC(commands.Cog):
                     break
         return res
 
-    async def catOrLevel(
-        self, game, name=None, levCatName=None, subcats: list = []
-    ):
+    async def catOrLevel(self, game, name=None, levCatName=None, subcats: list = []):
         """Get category/IL (first in the leaderboard or from category's name)."""
         # TODO: Clean this code up!
         cats = game["categories"]
