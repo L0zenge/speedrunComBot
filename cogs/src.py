@@ -131,7 +131,6 @@ class SRC(commands.Cog):
         self.baseUrl = "https://www.speedrun.com/api/v1"
 
     async def getVerified(self, user, game, offset):
-        print(offset)
         userID = user.id
         userName = user.name
 
