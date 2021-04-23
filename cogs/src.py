@@ -130,23 +130,6 @@ class SRC(commands.Cog):
         self.reLevelAndCat = re.compile(r"(.*)\((.*)\)")
         self.baseUrl = "https://www.speedrun.com/api/v1"
 
-    async def getVerified(self, user, game, offset):
-        userID = user.id
-        userName = user.name
-
-        params = {"examiner": userID, "page": 0, "perPage": 200}
-        if game:
-            # Get game id if game is specified
-            params["game"] = game.id
-
-        async with self.session.get(
-            self.baseUrl
-            + "/runs?examiner={}&offset={}&max=200".format(userID, offset)
-            + ("&game={}".format(game.id) if game else "")
-        ) as runs:
-            runs = await runs.json()
-            return runs["pagination"]["size"]
-
     @commands.command(aliases=["v"])
     async def verified(self, ctx, user: srcUser, game: srcGame = None):
         """Gets how many runs a user has verified."""
@@ -155,6 +138,18 @@ class SRC(commands.Cog):
             colour=discord.Colour.gold(),
         )
         initMsg = await ctx.reply(embed=e)
+
+        async def getVerified(offset):
+            async with self.session.get(
+                "{}/runs?examiner={}&offset={}&max=200{}".format(
+                    self.baseUrl,
+                    user.id,
+                    offset,
+                    "&game={}".format(game.id) if game else ""
+                )
+            ) as runs:
+                runs = await runs.json()
+                return runs["pagination"]["size"]
 
         # Get verified runs examined by {user}
         async def getVerifiedLoop():
@@ -166,7 +161,7 @@ class SRC(commands.Cog):
             done = False
             while not done:
                 futures = [
-                    self.getVerified(user, game, o)
+                    getVerified(o)
                     for o in range(
                         maxResult * amount * offset,
                         maxResult * amount * (offset + 1),
