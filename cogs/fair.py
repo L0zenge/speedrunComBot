@@ -10,6 +10,26 @@ from discord.ext import commands
 class Fair(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.db = self.bot.db
+
+        self.bot.loop.create_task(self.asyncInit())
+
+    async def asyncInit(self):
+        """`__init__` but async"""
+        # Create `fair_streak` table if its not exists
+        await self.db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS fair_streak
+            (
+                user_id INTEGER UNIQUE,
+                date TEXT NOT NULL,
+                day INTEGER NOT NULL DEFAULT 0,
+                streak INTEGER NOT NULL DEFAULT 0,
+                timezone TEXT
+            )
+            """
+        )
+        await self.db.commit()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -19,72 +39,83 @@ class Fair(commands.Cog):
         bad_words = ["fair", "ⓕⓐⓘⓡ", "ɹıɐɟ", "faİr", "justo", "adil"]
         count = 0
         fair = ""
+        fairMsg = "Fair"
 
         for word in bad_words:
+            # if member send "fair" or something similar
             if word in message.content.lower().replace(" ", ""):
-                # get fair object
-                with open("fair.json", "r") as f:
-                    fair = json.load(f)
+                userId = message.author.id
 
-                # if fairer's ID in fair.json
-                userId = str(message.author.id)
-                if userId in fair:
-                    tz = fair[userId]["timezone"]
+                # Default values
+                tz = "Europe/London"
+                date = str(datetime.datetime.now(timezone(tz)).date())
+                fairDay = 1
+                fairStreak = 1
+                streakLostMsg = "streak lost. <:sadge:796074093891682345>"
+                fairReplyMsg = "{} day {}, streak {}"
+                changed = False
+
+                async with self.db.execute(
+                    "SELECT * FROM fair_streak WHERE user_id = (?)", (userId,)
+                ) as curr:
+                    row = await curr.fetchone()
+                    if row:
+                        tz = row[4]
+                        yesterday = str(
+                            datetime.datetime.now(timezone(tz)).date() - timedelta(1)
+                        )
+                        # Date from database
+                        date = row[1]
+                        fairDay = row[2]
+                        fairStreak = row[3]
+                    else:
+                        # Insert user to fair_streak table if user_id not exist
+                        await self.db.execute(
+                            """
+                            INSERT OR IGNORE INTO fair_streak VALUES (?, ?, ?, ?, ?)
+                            """,
+                            # (user_id, date, day, streak, timezone,)
+                            (
+                                userId,
+                                date,
+                                fairDay,
+                                fairStreak,
+                                tz,
+                            ),
+                        )
+                        await self.db.commit()
+                        # New "fairer"
+                        changed = True
                     today = str(datetime.datetime.now(timezone(tz)).date())
-                    yesterday = str(
-                        datetime.datetime.now(timezone(tz)).date() - timedelta(1)
-                    )
-
-                    # if date in json != current date
-                    date = fair[userId]["date"]
-                    if date != today:
-                        # increment fair day
-                        fairDay = fair[userId]["day"] + 1
-
-                        fairStreak = fair[userId]["streak"]
-                        # if the user faired yesterday
+                    if today != date:
+                        fairDay += 1
                         if yesterday == date:
-                            fairStreak = fair[userId]["streak"] + 1
+                            fairStreak += 1
                         else:
                             fairStreak = 1
-                            await message.channel.send(
-                                "streak lost. <:sadge:796074093891682345>"
-                            )
-
-                        # only send && update if user is fairing for the first time today
-                        fair[userId] = {
-                            "day": fairDay,
-                            "streak": fairStreak,
-                            "date": today,
-                            "timezone": tz,
-                        }
-
-                        fairInfo = f"day {fair[userId]['day']}, streak {fair[userId]['streak']}"
-                        await message.channel.send(fairInfo)
-
-                # new user - not in fair.json
-                else:
-                    # default to GMT
-                    tz = "Europe/London"
-                    today = str(datetime.datetime.now(timezone(tz)).date())
-                    fair[userId] = {
-                        "day": 1,
-                        "streak": 1,
-                        "date": today,
-                        "timezone": tz,
-                    }
-
-                    fairInfo = (
-                        f"day {fair[userId]['day']}, streak {fair[userId]['streak']}"
+                            await message.channel.send(streakLostMsg)
+                        await self.db.execute(
+                            """
+                            UPDATE fair_streak
+                            SET
+                                date   = (?),
+                                day    = (?),
+                                streak = (?)
+                            WHERE user_id = (?)
+                            """,
+                            (
+                                today,
+                                fairDay,
+                                fairStreak,
+                            ),
+                        )
+                        await self.db.commit()
+                        changed = True
+                    fairMsg = (
+                        fairReplyMsg.format(fairMsg, fairDay, fairStreak)
+                        if changed
+                        else fairMsg
                     )
-                    await message.channel.send(fairInfo)
-
-                # overwrite with new fair object
-                with open("fair.json", "w") as f:
-                    json.dump(fair, f, indent=4)
-
-                count += 1
-                fairMsg = "Fair " * count
         try:
             await message.channel.send(fairMsg)
         except UnboundLocalError:
@@ -96,39 +127,39 @@ class Fair(commands.Cog):
     @commands.command()
     async def timezone(self, ctx, timeZone):
         """`Set timezone for fair days/streaks`"""
+        userId = ctx.author.id
 
-        # get fair object
-        with open("fair.json", "r") as f:
-            fair = json.load(f)
+        # Get data from database
+        async with self.db.execute(
+            "SELECT * FROM fair_streak WHERE user_id = (?)", (userId,)
+        ) as curr:
+            row = await curr.fetchone()
+            if not row:
+                return await ctx.send("Try saying 'fair' first!")
 
-        # if this user has faired before
-        userId = str(ctx.author.id)
-        if userId not in fair:
-            # new user
-            await ctx.send("try saying 'fair' first")
-            return
-
-        try:
-            # let users timezone = input timezone (string version so as to please json)
-            # use timezone() simply to see if it's valid
             tz = str(timezone(timeZone))
+        
+            await self.db.execute(
+                """
+                UPDATE fair_streak
+                SET timezone = (?)
+                WHERE user_id = (?)
+                """,
+                (userId, tz)
+            )
+            await self.db.commit()
+            await ctx.reply(
+                "Your timezone has been set to `{}`".format(tz)
+            )
 
-        except exceptions.UnknownTimeZoneError:
-            await ctx.send(
+    @timezone.error
+    async def timezone_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, exceptions.UnknownTimeZoneError):
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.reply(
                 "That's not a valid timezone. You can look them up at https://kevinnovak.github.io/Time-Zone-Picker/"
             )
-            return
-
-        # set user's timezone to (verified) input zone
-        fair[userId]["timezone"] = tz
-
-        # overwrite with new fair object
-        with open("fair.json", "w") as f:
-            json.dump(fair, f, indent=4)
-
-        await ctx.send(
-            f"{discord.utils.escape_mentions(ctx.message.author.display_name)} your timezone has been set to {timeZone}"
-        )
 
 
 def setup(bot):

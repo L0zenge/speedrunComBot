@@ -35,9 +35,9 @@ class RunGet(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.bot.loop.create_task(self.asyncInit())
         self.session = self.bot.session
         self.db = self.bot.db
+        self.bot.loop.create_task(self.asyncInit())
 
     def ownerOrPerms(**perms):
         original = commands.has_permissions(**perms).predicate
