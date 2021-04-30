@@ -39,7 +39,6 @@ class Fair(commands.Cog):
         bad_words = ["fair", "ⓕⓐⓘⓡ", "ɹıɐɟ", "faİr", "justo", "adil"]
         count = 0
         fair = ""
-        fairMsg = "Fair"
 
         for word in bad_words:
             # if member send "fair" or something similar
@@ -52,6 +51,7 @@ class Fair(commands.Cog):
                 fairDay = 1
                 fairStreak = 1
                 streakLostMsg = "streak lost. <:sadge:796074093891682345>"
+                fairMsg = "Fair"
                 fairReplyMsg = "{} day {}, streak {}"
                 changed = False
 
