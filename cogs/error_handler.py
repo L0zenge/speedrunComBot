@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import json
+import pytz
 import sys
 import traceback
 
@@ -30,6 +31,12 @@ class ErrorHandler(commands.Cog):
         # Allows us to check for original exceptions raised and sent to CommandInvokeError.
         # If nothing is found. We keep the exception passed to on_command_error.
         error = getattr(error, "original", error)
+        
+        if isinstance(error, pytz.exceptions.UnknownTimeZoneError):
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.reply(
+                "That's not a valid timezone. You can look them up at https://kevinnovak.github.io/Time-Zone-Picker/"
+            )
 
         if isinstance(error, commands.CommandNotFound):
             return

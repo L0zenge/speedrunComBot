@@ -153,15 +153,6 @@ class Fair(commands.Cog):
                 "Your timezone has been set to `{}`".format(tz)
             )
 
-    @timezone.error
-    async def timezone_error(self, ctx, error):
-        error = getattr(error, "original", error)
-        if isinstance(error, exceptions.UnknownTimeZoneError):
-            ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(
-                "That's not a valid timezone. You can look them up at https://kevinnovak.github.io/Time-Zone-Picker/"
-            )
-
 
 def setup(bot):
     bot.add_cog(Fair(bot))
