@@ -107,6 +107,7 @@ class Fair(commands.Cog):
                                 today,
                                 fairDay,
                                 fairStreak,
+                                userId,
                             ),
                         )
                         await self.db.commit()
