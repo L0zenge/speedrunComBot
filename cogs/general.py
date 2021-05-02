@@ -148,8 +148,6 @@ class General(commands.Cog):
                 if role.name != "@everyone":
                     roles.append(role.mention)
 
-        jakarta = timezone("Asia/Jakarta")
-
         if member:
             status = member.status
             statEmoji = stat(member.status)
@@ -178,14 +176,12 @@ class General(commands.Cog):
         embed.add_field(
             name="Created on",
             value=member.created_at.replace(tzinfo=timezone("UTC"))
-            .astimezone(jakarta)
-            .strftime("%a, %#d %B %Y, %H:%M WIB"),
+            .strftime("%a, %#d %B %Y, %H:%M"),
         )
         embed.add_field(
             name="Joined on",
             value=member.joined_at.replace(tzinfo=timezone("UTC"))
-            .astimezone(jakarta)
-            .strftime("%a, %#d %B %Y, %H:%M WIB")
+            .strftime("%a, %#d %B %Y, %H:%M")
             if member
             else "Not a member.",
         )
