@@ -139,19 +139,17 @@ class Fair(commands.Cog):
                 return await ctx.send("Try saying 'fair' first!")
 
             tz = str(timezone(timeZone))
-        
+
             await self.db.execute(
                 """
                 UPDATE fair_streak
                 SET timezone = (?)
                 WHERE user_id = (?)
                 """,
-                (userId, tz)
+                (userId, tz),
             )
             await self.db.commit()
-            await ctx.reply(
-                "Your timezone has been set to `{}`".format(tz)
-            )
+            await ctx.reply("Your timezone has been set to `{}`".format(tz))
 
 
 def setup(bot):

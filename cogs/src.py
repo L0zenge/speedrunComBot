@@ -145,7 +145,7 @@ class SRC(commands.Cog):
                     self.baseUrl,
                     user.id,
                     offset,
-                    "&game={}".format(game.id) if game else ""
+                    "&game={}".format(game.id) if game else "",
                 )
             ) as runs:
                 runs = await runs.json()
@@ -173,6 +173,7 @@ class SRC(commands.Cog):
                 if runs[-1] < 200:
                     done = True
             return runs
+
         runs = await asyncio.create_task(getVerifiedLoop())
 
         e = discord.Embed(

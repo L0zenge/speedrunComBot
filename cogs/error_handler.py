@@ -31,7 +31,7 @@ class ErrorHandler(commands.Cog):
         # Allows us to check for original exceptions raised and sent to CommandInvokeError.
         # If nothing is found. We keep the exception passed to on_command_error.
         error = getattr(error, "original", error)
-        
+
         if isinstance(error, pytz.exceptions.UnknownTimeZoneError):
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(
@@ -40,12 +40,9 @@ class ErrorHandler(commands.Cog):
 
         if isinstance(error, commands.CommandNotFound):
             return
-        
+
         if isinstance(error, GameNotFound):
-            e = discord.Embed(
-                title=str(error),
-                colour=discord.Colour.red()
-            )
+            e = discord.Embed(title=str(error), colour=discord.Colour.red())
             return await ctx.reply(embed=e)
 
         if isinstance(error, commands.CommandOnCooldown):

@@ -175,13 +175,15 @@ class General(commands.Cog):
         )
         embed.add_field(
             name="Created on",
-            value=member.created_at.replace(tzinfo=timezone("UTC"))
-            .strftime("%a, %#d %B %Y, %H:%M"),
+            value=member.created_at.replace(tzinfo=timezone("UTC")).strftime(
+                "%a, %#d %B %Y, %H:%M"
+            ),
         )
         embed.add_field(
             name="Joined on",
-            value=member.joined_at.replace(tzinfo=timezone("UTC"))
-            .strftime("%a, %#d %B %Y, %H:%M")
+            value=member.joined_at.replace(tzinfo=timezone("UTC")).strftime(
+                "%a, %#d %B %Y, %H:%M"
+            )
             if member
             else "Not a member.",
         )
