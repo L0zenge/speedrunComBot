@@ -1,9 +1,9 @@
-# `speedrunComBot` previously known as `Mango Man Bot`
+# `speedrunComBot`
 **Python 3.8 or Later is required!**
 
 Default Prefix: `mm!`
 
-A Discord Bot created for Obscure Discord Server to replace [run-get](https://github.com/slashinfty/run-get).
+`speedrunComBot` previously known as `Mango Man Bot`, is a Discord Bot created for Obscure Discord Server to replace [run-get](https://github.com/slashinfty/run-get).
 
 ## Key Feature
 Sends recently verified runs for any games (from speedrun.com) that you pick. (Also works in DM)
@@ -32,4 +32,4 @@ Sends recently verified runs for any games (from speedrun.com) that you pick. (A
 - Basic moderation commands (ban, unban, kick, poll, and purge)
 
 ## License
-[Public Domain](LICENSE)
+[Unlincense (Public Domain)](LICENSE)
