@@ -32,4 +32,4 @@ Sends recently verified runs for any games (from speedrun.com) that you pick. (A
 - Basic moderation commands (ban, unban, kick, poll, and purge)
 
 ## License
-[Unlincense (Public Domain)](LICENSE)
+[Unlicense (Public Domain)](LICENSE)
