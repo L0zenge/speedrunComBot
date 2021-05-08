@@ -1,4 +1,4 @@
-# `Mango Man Bot`
+# `speedrunComBot` previously known as `Mango Man Bot`
 **Python 3.8 or Later is required!**
 
 Default Prefix: `mm!`
