@@ -312,7 +312,7 @@ class General(commands.Cog):
 
     @commands.command()
     async def welcome(self, ctx):
-        await ctx.send("Welcome! <:mangoWelcome:815960591263989861>")
+        await ctx.send("Welcome! :]")
 
 
 def setup(bot):
