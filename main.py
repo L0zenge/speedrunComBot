@@ -12,8 +12,8 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-client = MangoManBot()
+bot = MangoManBot()
 
 
 loop = asyncio.get_event_loop()
-client.run()
+bot.run()
